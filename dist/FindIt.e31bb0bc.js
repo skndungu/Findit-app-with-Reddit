@@ -104,18 +104,96 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
   // Override the current require with this new one
   return newRequire;
-})({"index.js":[function(require,module,exports) {
+})({"redditapi.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _default = {
+  search: function search(searchTerm, searchLimit, sortBy) {
+    return fetch("http://www.reddit.com/search.json?q=".concat(searchTerm, "&sort=").concat(sortBy, "&limit=&").concat(searchLimit)).then(function (res) {
+      return res.json();
+    }).then(function (data) {
+      return data.data.children.map(function (data) {
+        return data.data;
+      });
+    }).catch(function (err) {
+      return console.log(err);
+    });
+  }
+};
+exports.default = _default;
+},{}],"index.js":[function(require,module,exports) {
+"use strict";
+
+var _redditapi = _interopRequireDefault(require("./redditapi"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 var searchForm = document.getElementById('search-form');
-var searchInput = document.getElementById('search-input');
+var searchInput = document.getElementById('search-input'); //Form event listener
+
 searchForm.addEventListener('submit', function (e) {
   //Get search term
   var searchTerm = searchInput.value; // console.log(searchTerm);
 
-  var sortBy = document.querySelector('input[name="sortBy"]:checked').value;
-  console.log(sortBy);
+  var sortBy = document.querySelector('input[name="sortBy"]:checked').value; // console.log(sortBy);
+  //Get Limit
+
+  var searchLimit = document.getElementById('limit').value;
+  console.log(searchLimit);
+
+  if (searchTerm == '') {
+    //Show message
+    showMessage('please add a search term', 'alert-danger');
+  } //Clear search
+
+
+  searchInput.value = ''; //Search Reddit
+
+  _redditapi.default.search(searchTerm, searchLimit, sortBy).then(function (results) {
+    console.log(results);
+    var output = '<div class="card-columns>'; //Loop through the posts
+
+    results.forEach(function (post) {
+      var image = post.preview ? post.preview.images[0].source.url : 'https://cdn.vox-cdn.com/thumbor/OyJuiYH-nf6CdodLdrNC687SuvM=/0x0:640x427/1200x800/filters:focal(0x0:640x427)/cdn.vox-cdn.com/uploads/chorus_image/image/46682528/reddit_logo_640.0.jpg';
+      output += "\n            <div class=\"card\">\n                <img class=\"card-img-top\" src=\"".concat(image, "\" alt=\"Card image cap\">\n                <div class=\"card-body\">\n                    <h5 class=\"card-title\">").concat(post.title, "</h5>\n                    <p class=\"card-text\">").concat(truncateText(post.selftext, 100), "</p>\n                    <a href=\"").concat(post.url, "\" target=\"_blank\" class=\"btn btn-primary\">Read More</a>\n                    <hr>\n                    <span class = \"badge badge-secondary\">Subreddit: ").concat(post.subreddit, "</span>\n                    <span class = \"badge badge-dark\">score: ").concat(post.score, "</span>\n\n                </div>\n            </div>\n            ");
+      output += '</div>';
+      document.getElementById('results').innerHTML = output;
+    });
+  });
+
   e.preventDefault();
 });
-},{}],"../../Users/skndungu/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+
+function showMessage(message, className) {
+  // Create div 
+  var div = document.createElement('div'); //Add classes
+
+  div.className = "alert ".concat(className); //Add text
+
+  div.appendChild(document.createTextNode(message)); //Get parent
+
+  var searchContainer = document.getElementById('search-container'); //Get search 
+
+  var search = document.getElementById('search'); //Insert message
+
+  searchContainer.insertBefore(div, search); //Timeout alert
+
+  setTimeout(function () {
+    return document.querySelector('.alert').remove();
+  }, 2000);
+} //Truncate text
+
+
+function truncateText(text, limit) {
+  var shortened = text.indexOf(' ', limit);
+  if (shortened == -1) return text;
+  return text.substring(0, shortened);
+}
+},{"./redditapi":"redditapi.js"}],"../../Users/skndungu/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
